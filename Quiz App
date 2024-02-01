@@ -1,0 +1,127 @@
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
+
+class QuizQuestion {
+    private String question;
+    private List<String> options;
+    private int correctAnswerIndex;
+
+    public QuizQuestion(String question, List<String> options, int correctAnswerIndex) {
+        this.question = question;
+        this.options = options;
+        this.correctAnswerIndex = correctAnswerIndex;
+    }
+
+    public String getQuestion() {
+        return question;
+    }
+
+    public List<String> getOptions() {
+        return options;
+    }
+
+    public int getCorrectAnswerIndex() {
+        return correctAnswerIndex;
+    }
+}
+
+class QuizGame {
+    private List<QuizQuestion> quizQuestions;
+    private int currentQuestionIndex;
+    private int userScore;
+
+    public QuizGame(List<QuizQuestion> quizQuestions) {
+        this.quizQuestions = quizQuestions;
+        this.currentQuestionIndex = 0;
+        this.userScore = 0;
+    }
+
+    public void startGame() {
+        Scanner scanner = new Scanner(System.in);
+
+        for (QuizQuestion question : quizQuestions) {
+            presentQuestion(question);
+
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    System.out.println("\nTime's up! Moving to the next question.");
+                    timer.cancel();
+                    processAnswer(-1); // -1 indicates no answer submitted
+                }
+            }, 15000); // 15 seconds timer
+
+            System.out.print("Enter your choice (1-" + question.getOptions().size() + "): ");
+            int userChoice = scanner.nextInt();
+
+            timer.cancel(); // Cancel the timer since the user submitted an answer
+            processAnswer(userChoice - 1); // Adjust user choice to match the index
+        }
+
+        displayResult();
+    }
+
+    private void presentQuestion(QuizQuestion question) {
+        System.out.println("\n" + question.getQuestion());
+
+        List<String> options = question.getOptions();
+        for (int i = 0; i < options.size(); i++) {
+            System.out.println((i + 1) + ". " + options.get(i));
+        }
+    }
+
+    private void processAnswer(int userChoice) {
+        QuizQuestion currentQuestion = quizQuestions.get(currentQuestionIndex);
+
+        if (userChoice == currentQuestion.getCorrectAnswerIndex()) {
+            System.out.println("Correct!");
+            userScore++;
+        } else if (userChoice == -1) {
+            System.out.println("Time's up! The correct answer was: " +
+                    (currentQuestion.getCorrectAnswerIndex() + 1) + ". " +
+                    currentQuestion.getOptions().get(currentQuestion.getCorrectAnswerIndex()));
+        } else {
+            System.out.println("Incorrect! The correct answer was: " +
+                    (currentQuestion.getCorrectAnswerIndex() + 1) + ". " +
+                    currentQuestion.getOptions().get(currentQuestion.getCorrectAnswerIndex()));
+        }
+
+        currentQuestionIndex++;
+    }
+
+    private void displayResult() {
+        System.out.println("\nQuiz completed!");
+        System.out.println("Your final score: " + userScore + "/" + quizQuestions.size());
+
+        // Display a summary of correct and incorrect answers if needed
+        for (int i = 0; i < quizQuestions.size(); i++) {
+            QuizQuestion question = quizQuestions.get(i);
+            System.out.println("Q" + (i + 1) + ": " +
+                    (userScore >= i + 1 ? "Correct" : "Incorrect") +
+                    " - Correct answer: " + (question.getCorrectAnswerIndex() + 1));
+        }
+    }
+}
+
+public class QuizApp {
+    public static void main(String[] args) {
+        List<QuizQuestion> quizQuestions = new ArrayList<>();
+
+        // Sample quiz questions
+        quizQuestions.add(new QuizQuestion("What is the capital of France?",
+                List.of("Berlin", "Paris", "Madrid", "Rome"), 1));
+        quizQuestions.add(new QuizQuestion("Which planet is known as the Red Planet?",
+                List.of("Venus", "Mars", "Jupiter", "Saturn"), 1));
+        quizQuestions.add(new QuizQuestion("What is the largest mammal in the world?",
+                List.of("Elephant", "Blue Whale", "Giraffe", "Hippopotamus"), 1));
+
+        QuizGame quizGame = new QuizGame(quizQuestions);
+        quizGame.startGame();
+    }
+}
+
